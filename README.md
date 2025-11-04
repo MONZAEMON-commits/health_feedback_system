@@ -1,3 +1,18 @@
 # 社員体調管理・ご意見箱システム
 
-初期セットアップ中。
+Django（Python）と PHP を組み合わせて構築する  
+社員体調管理・匿名ご意見箱統合システム。
+
+## 📂 ドキュメント構成
+| ファイル | 内容 |
+|-----------|------|
+| docs/01_overview.md | 概要・目的 |
+| docs/02_use_cases.md | 利用シーン |
+| docs/03_requirements.md | 機能・非機能要件 |
+| docs/04_design_system.md | 画面設計・UI構成 |
+| docs/05_db_design.md | DB設計（ER図含む） |
+| docs/06_system_flow.md | 処理・統計・通知フロー |
+| docs/07_feedback_module.md | ご意見箱詳細設計（PHP側） |
+| docs/08_api_integration.md | Django-PHP連携 |
+| docs/09_security_policy.md | セキュリティ・匿名処理方針 |
+| docs/10_update_history.md | 更新履歴 |
