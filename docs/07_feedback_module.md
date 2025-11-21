@@ -27,6 +27,13 @@ php_opinion_box/
 ├── js/validation.js
 └── opinions/opinion_box.csv
 ```
+（追記）
+
+【Django との連携仕様（employee_id）】
+- Django 側でログイン後に取得した employee_id を、
+  `index.php?id=xxxxx` のように URL パラメータとして受け取る。
+- 受け取った employee_id は form.php → confirm.php → submit.php と
+  hidden フィールドで引き継ぎ、CSV の employee_id カラムとして保存する。
 
 ---
 
@@ -96,8 +103,8 @@ php_opinion_box/
 ### ● CSV 出力形式（１レコード）
 
 ```csv
-timestamp, mode, gender, age, department, content, tag
-2025-01-01 10:00, 匿名, -, -, -, "意見内容", "業務改善"
+timestamp, employee_id, mode, gender, age, department, content, tag
+2025-01-01 10:00, E00123, 匿名, -, -, -, "意見内容", "業務改善"
 ```
 
 ---
@@ -155,4 +162,8 @@ df["timestamp"] = pd.to_datetime(df["timestamp"])
 - 時間帯別傾向  
 - 部署別意見傾向（署名のみ）  
 - 性別・年代ごとの意見傾向（準匿名）  
+- employee_id による社員単位の傾向分析  
+  （部署・職種・勤続年数など、Djangoの社内DBと突き合わせて可視化可能）
+- 匿名／準匿名／署名モードは mode カラムにより制御されるが、  
+  employee_id は管理目的で常に保存されるため管理者側の内部分析に利用できる
 
