@@ -40,19 +40,24 @@ project/
 │   ├── conditions/          ← 体調管理アプリ
 │   ├── dashboard/           ← 管理者画面
 │   ├── analysis/            ← pandas 分析
-│   └── templates/           ← HTMLテンプレ
+│   ├── templates/           ← HTMLテンプレート
+│   └── static/              ← ★ 追加：Django静的ファイル
+│       ├── css/             ←（必要に応じて利用）
+│       ├── js/              ←（必要に応じて利用）
+│       └── img/             ← ★ 追加：アイコン画像（体調入力用）
 │
 ├── php_opinion_box/         ← ご意見箱(PHP)
-│   ├── index.php            ← 投稿形式選択
-│   ├── form.php             ← 入力画面
-│   ├── confirm.php          ← 確認画面
-│   ├── submit.php           ← CSV保存
-│   ├── success.php          ← 完了画面
+│   ├── index.php
+│   ├── form.php
+│   ├── confirm.php
+│   ├── submit.php
+│   ├── success.php
 │   ├── css/style.css
 │   ├── js/validation.js
 │   └── opinions/opinion_box.csv
 │
 └── docs/                    ← 設計書
+
 ```
 
 ---
