@@ -80,13 +80,68 @@ project/
 - グラフ描画は Django + （必要なら Chart.js 併用）  
 - 無操作 1〜60分で自動ログアウト（設定可能）
 
-### 4.3.3 ご意見箱画面（PHP）
+### 4.3.3 ご意見箱画面（PHP）（更新後）
 
-- モード選択：匿名／準匿名／署名  
-- 説明を表示し、続行ボタンで入力画面へ  
-- タグ（カテゴリ）必須選択（分類分析用）  
-- 確認画面 → 投稿 → CSV保存  
-- 完了画面で 5 秒後自動リダイレクト
+PHP で実装される「ご意見箱」は、Django 側のログイン認証後に  
+employee_id を引き継いだ状態でアクセスされる。  
+本機能では、投稿形式の選択 → 入力 → 確認 → 投稿 → 完了 の  
+5 画面構成で動作する。
+
+---
+
+#### ■ index.php（投稿形式選択）
+
+- Django 側の画面からリンクされ、employee_id を GET で受け取る  
+- 3 種類の投稿モード（匿名 / 準匿名 / 署名）をラジオボタンで選択  
+- 投稿形式の説明文を表示し、「次へ」ボタンで form.php へ進む  
+- 遷移時は employee_id と mode を POST で送信する
+
+---
+
+#### ■ form.php（入力フォーム）
+
+- 意見本文（textarea）を入力（必須）  
+- タグ（カテゴリ）を必須選択  
+- employee_id と mode は hidden により保持  
+- 「確認」ボタンで confirm.php へ進む  
+- 入力チェックはブラウザの required と軽量 JavaScript を併用  
+  - 空欄送信防止  
+  - タグ未選択の防止
+
+---
+
+#### ■ confirm.php（確認画面）
+
+- content と tag を htmlspecialchars によりエスケープして表示  
+- employee_id・mode は hidden のまま保持して submit.php に引き渡す  
+- 「戻る」で form.php に戻り、入力内容を再編集可能  
+- 「送信する」で submit.php に POST する
+
+---
+
+#### ■ submit.php（保存処理）
+
+- employee_id / mode / content / tag が揃っていない場合は処理しない  
+- timestamp を付与して CSV（opinion_box.csv）に追記  
+- 保存成功後は success.php に遷移する  
+- 非同期処理は行わず、画面遷移型で実装
+
+---
+
+#### ■ success.php（完了画面）
+
+- 「投稿が完了しました」を表示  
+- meta refresh により **5 秒後に Django のログイン画面へ自動遷移**  
+- 手動でログイン画面へ戻るリンクを設置  
+- 完了後は employee_id を保持せず、ログインから再取得する設計とする
+
+---
+
+#### ■ タグの扱い（補足）
+
+- タグは分析分類の基礎データとなるため必須  
+- 誤送信防止のため form.php の段階で required 化  
+- CSV に直接保存され、後に Django 側で集計する
 
 ---
 
@@ -119,55 +174,221 @@ project/
 
 ---
 
-## 4.5 ご意見箱（PHP）モジュール設計
+## 4.5 ご意見箱（PHP）モジュール設計（更新後）
+
+本節では、Django 本体とは独立して動作する  
+ご意見箱（php_opinion_box）モジュールの構造・画面遷移・データ保存仕様を示す。
+
+本モジュールは、Django 側で認証された社員ID（employee_id）を受け取り、  
+投稿内容を CSV として保存する。  
+個人情報（氏名・部署・性別・年代）は PHP 側では扱わず、  
+Django 側で employee_id をキーとして補完する。
+
+---
 
 ### 4.5.1 構成概要
 
 ```text
 php_opinion_box/
-├── index.php        ← 投稿モード選択
-├── form.php         ← 入力フォーム
-├── confirm.php      ← 確認画面
-├── submit.php       ← CSV保存処理
-├── success.php      ← 完了画面
+├── index.php        ← 投稿モードの選択画面（匿名/準匿名/署名）
+├── form.php         ← 入力フォーム（内容 + タグ）
+├── confirm.php      ← 入力確認画面
+├── submit.php       ← CSV 追記処理
+├── success.php      ← 完了画面（5秒後 Django ログインへ遷移）
 ├── css/style.css
 ├── js/validation.js
 └── opinions/opinion_box.csv
 ```
 
-### 4.5.2 投稿形式
+---
 
-| 形式   | 内容                         | 取得する情報      |
-| ------ | ---------------------------- | ----------------- |
-| 匿名   | 完全匿名で投稿               | 不要              |
-| 準匿名 | 性別・年代を付与             | gender, age_range |
-| 署名   | 氏名・部署・性別・年齢を付与 | 全情報            |
+### 4.5.2 投稿形式（mode）
 
-### 4.5.3 CSV 保存仕様
+投稿時に選択可能なモードは以下の3種類。
+
+| 形式              | 内容                     | PHPが扱う情報 | Djangoが補完する情報   |
+| ----------------- | ------------------------ | ------------- | ---------------------- |
+| 匿名（anonymous） | 完全匿名                 | content, tag  | すべて "-"             |
+| 準匿名（semi）    | 性別・年代を使用する投稿 | content, tag  | gender, age_range      |
+| 署名（signed）    | 本人特定可能な情報を使用 | content, tag  | 氏名, 部署, 年齢, 性別 |
+
+※ PHP は employee_id + mode + content + tag の4項目のみ扱い、  
+　個人情報は Django が employee_id から取得する。
+
+---
+
+### 4.5.3 画面構成
+
+#### ■ index.php（投稿モード選択）
+
+- Django から employee_id を GET で受け取る  
+- ラジオボタンで投稿形式（mode）を選ぶ  
+- mode と employee_id を POST で form.php に送信
+
+#### ■ form.php（入力画面）
+
+- textarea による意見本文（必須）  
+- tag（分類カテゴリ）の必須選択  
+- employee_id と mode は hidden で保持し confirm.php へ送信
+
+#### ■ confirm.php（確認画面）
+
+- content と tag を htmlspecialchars でエスケープ  
+- employee_id と mode を hidden のまま次へ引き継ぐ  
+- 「戻る」で form.php に戻れる  
+- 「送信」で submit.php へ POST
+
+#### ■ submit.php（CSV保存）
+
+- 必須値（employee_id / mode / content / tag）が揃っていない場合は処理中断  
+- timestamp を生成し CSV に追記する  
+- 追記成功後は success.php へ遷移
+
+#### ■ success.php（完了画面）
+
+- 「投稿が完了しました」を表示  
+- meta refresh で **5秒後 Django のログイン画面へ自動遷移**  
+- 手動でログイン画面に戻るリンクを設置
+
+---
+
+### 4.5.4 CSV 保存仕様（更新後）
+
+PHP 側で保存する CSV は以下の構造とする。
 
 ```csv
-timestamp, mode, gender, age, department, content, tag
-2025-01-01 10:00, 匿名, -, -, -, "〜〜〜〜", "業務改善"
-2025-01-01 10:05, 署名, 女性, 29, 開発, "〜〜〜〜", "安全性"
+timestamp, employee_id, mode, content, tag
+2025-11-25 12:00:00, test001, signed, "改善点があります", 業務改善
+```
+
+#### ■ 補足
+
+- 個人情報（氏名・部署・性別・年代）は **保存しない**  
+- Django 側で employee_id を使って補完する  
+- CSV は追記モード（append）  
+- Excel 誤認識回避のため、先頭が `=`, `+`, `-`, `@` の場合はエスケープする
+
+---
+
+### 4.5.5 タグ（分類カテゴリ）
+
+初期カテゴリは以下のとおり。
+
+- 業務改善  
+- 人間関係  
+- 設備・環境  
+- 安全性  
+- その他  
+
+タグは分析に用いるため必須入力とする。
+
+---
+
+### 4.5.6 本モジュールの役割整理
+
+- PHP はあくまで **投稿（content + tag）を受け取り CSV に保存する機能** のみ担当  
+- 個人情報・社員情報・分析はすべて Django 側で実施  
+- 投稿完了後は Django のログイン画面に戻すことで  
+  employee_id の再取得とシステム整合性を維持する
+
+---
+
+## 4.6 データ連携設計（CSV / DB）（更新後）
+
+本節では、Django（体調管理システム）と PHP ご意見箱モジュール間の  
+データ連携仕様を定義する。  
+ご意見箱モジュールは Django から employee_id を受け取り、  
+投稿結果を CSV に保存する。  
+Django 側はこの CSV と社員DB を組み合わせて分析を実行する。
+
+---
+
+### ● Django → SQLite（体調データ）
+
+- 社員ID、日付、体調スコア（肉体/精神）を保存  
+- 欠勤は NULL  
+- 対象外社員は is_target フラグで除外  
+- 管理者画面（dashboard）で可視化を行う
+
+---
+
+### ● PHP → CSV（意見投稿データ）
+
+ご意見箱では以下の5項目を CSV に追記する。
+
+```csv
+timestamp, employee_id, mode, content, tag
+2025-11-25 12:00:00, test001, signed, "改善点があります", 業務改善
+```
+
+#### ■ 重要ポイント（更新版仕様）
+
+- **性別・年代・氏名・部署は PHP 側では扱わない**  
+- **employee_id を用いて Django 側で個人情報を補完する構造に変更**  
+- mode に応じて Django 側が参照する列を制御する  
+  - anonymous → すべて "-"  
+  - semi → 性別・年代のみ使用  
+  - signed → 氏名・部署・年齢・性別を使用  
+- content は htmlspecialchars 済み  
+- tag は分類分析のため必須入力
+
+---
+
+### ● Django（analysis モジュール）
+
+Django 側の analysis モジュールでは以下を行う：
+
+#### 1. SQLite（体調データ）と CSV（意見データ）を読み込む  
+- pandas を用いて双方のデータを DataFrame 化する  
+- timestamp を datetime 型に変換する
+
+#### 2. employee_id をキーに社員情報DBを参照し、個人情報を補完する  
+- 性別（gender）  
+- 年代（age_range）  
+- 氏名（name）  
+- 部署（department）  
+- 年齢（age）  
+
+#### 3. mode に応じて不要な項目を "-" に変換する  
+- anonymous → 全列 "-"  
+- semi → 氏名・部署・年齢は "-"  
+- signed → 全列そのまま使用
+
+#### 4. 分析用 DataFrame の構築  
+例：
+
+```python
+分析用_df = pd.DataFrame({
+    "timestamp": df["timestamp"],
+    "employee_id": df["employee_id"],
+    "mode": df["mode"],
+    "content": df["content"],
+    "tag": df["tag"],
+    "gender": 補完データ["gender"],
+    "age_range": 補完データ["age_range"],
+    "department": 補完データ["department"],
+})
 ```
 
 ---
 
-## 4.6 データ連携設計（CSV / DB）
+### ● 分析で利用する主な指標
 
-### ● Django → SQLite
-- 体調データ（社員ID・日付・スコア）を保存  
-- 欠勤は NULL  
-- is_target フラグで対象外社員を除外
+- タグ別件数（業務改善 / 人間関係 / 設備環境 / 安全性）  
+- 部署別の傾向分析（署名モードのみ）  
+- 性別・年代別の傾向分析（準匿名モード）  
+- 時間帯別の投稿傾向  
+- 月別の投稿件数推移  
+- 体調データとの相関（将来拡張）
 
-### ● PHP → CSV
-- ご意見投稿を追記  
-- pandas で定期的に分析可能
+---
 
-### ● Django（analysis モジュール）
-- SQLite + CSV の両方を読み込む  
-- 統計分析（平均、中央値、分布、変動）  
-- 管理者画面へ結果出力
+### ● この方式のメリット
+
+- ご意見箱（PHP）は **個人情報を保持しない** ため安全  
+- Django 側で一元的に社員情報を管理できる  
+- CSV と DB を組み合わせた柔軟な分析が可能  
+- 拡張（AI分析、部署別詳細表示）が容易  
 
 ---
 

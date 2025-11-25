@@ -47,21 +47,32 @@
 
 ## 6.3 ご意見箱（PHP）フロー
 
-### 6.3.1 投稿モード選択
+### 6.3 ご意見箱（PHP）フロー（更新後）
+
+本フローは Django 側のログイン後に実行され、  
+employee_id を引き継いだ状態で遷移する。
+
+---
+
+### 6.3.1 投稿モード選択（index.php）
 
 ```text
 [index.php]
 　　↓
 （匿名／準匿名／署名 のいずれかを選択）
 　　↓
-[説明画面]
+[次へボタン]
 　　↓
-[続行ボタン]
+[form.php]
 ```
+
+- Django から employee_id を GET で受け取る  
+- ラジオボタンで投稿形式（mode）を選択  
+- employee_id と mode を POST で form.php に送信する
 
 ---
 
-### 6.3.2 入力 → 確認 → 投稿
+### 6.3.2 入力 → 確認 → 投稿（form.php → confirm.php → submit.php）
 
 ```text
 [form.php]
@@ -75,8 +86,12 @@
 （CSV に追記保存）
 　　↓
 [success.php]
-（5秒後に index.php へ戻る）
+（5秒後に Django ログイン画面へ遷移）
 ```
+- content と tag は必須入力  
+- employee_id と mode は hidden で引き回す  
+- submit.php で CSV 追記後、success.php へ遷移する  
+- success.php は 5 秒後に Django のログイン画面へ戻る
 
 ---
 

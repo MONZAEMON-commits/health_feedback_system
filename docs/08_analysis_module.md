@@ -41,29 +41,122 @@ project_root/
 
 ---
 
-## 8.3 CSV データ連携（メイン）
+## 8.3 CSV データ連携（更新後）
 
-### ● 8.3.1 読み取り仕様（Django → PHP）
-- Django は PHP が保存した CSV を読み込むだけ
-- 解析は pandas で実施
-- 編集・書き換えは行わない
+本節では PHP 側で保存した CSV を Django 側が読み込み、  
+社員情報を補完し分析に利用するための連携仕様を定義する。
 
-```python
-df = pd.read_csv("php_opinion_box/opinions/opinion_box.csv")
+PHP 側は個人情報を一切保持せず、  
+Django 側で employee_id を用いて必要な情報を補完する設計に変更されたため、  
+本節の内容を最新仕様に合わせて更新する。
+
+---
+
+### 8.3.1 書き込み仕様（PHP → CSV）
+
+PHP 側では、submit.php にて投稿データを CSV に追記保存する。
+
+保存されるレコード形式は以下のとおり。
+
+```csv
+timestamp, employee_id, mode, content, tag
+2025-11-25 12:00:00, test001, signed, "改善点があります", 業務改善
 ```
 
-### ● 8.3.2 書き込み仕様（PHP → Django）
-- PHP 側では追記モードで CSV に書き込む
-- 1 レコード＝1 投稿
-- ロック処理は排他制御（簡易）を採用
+#### ● 書き込みルール
+- fputcsv による追記保存  
+- CSV は 1 投稿 = 1 レコード  
+- 個人情報（氏名 / 部署 / 性別 / 年代）は **保存しない**  
+- 必須項目：employee_id / mode / content / tag  
+- content は htmlspecialchars 済みを保存  
+- タグは分類分析のため必須  
+- Excel 誤認防止のため以下の文字で始まる場合はエスケープ  
+  - =, +, -, @
+
+#### ● サンプル PHP 処理（概念的記述）
 
 ```php
 $fp = fopen('opinions/opinion_box.csv', 'a');
-flock($fp, LOCK_EX);
-fputcsv($fp, $data);
+flock($fp, LOCK_EX);           // 排他
+fputcsv($fp, [$timestamp, $employee_id, $mode, $content, $tag]);
 flock($fp, LOCK_UN);
 fclose($fp);
 ```
+
+#### ● 保存後の遷移
+CSV 保存成功後は **success.php → 5秒後 Django ログイン画面へ遷移**する。
+
+---
+
+### 8.3.2 読み取り仕様（Django → pandas）
+
+Django 側は PHP が保存した CSV を読み込み、  
+employee_id をキーとして社員DBの情報を補完し、  
+分析用 DataFrame を構築する。
+
+```python
+df = pd.read_csv("php_opinion_box/opinions/opinion_box.csv")
+df["timestamp"] = pd.to_datetime(df["timestamp"])
+```
+
+---
+
+### 8.3.3 Django 側での情報補完仕様（重要）
+
+employee_id により Django の社員DBを参照し、  
+以下の情報を取得する。
+
+- gender（性別）  
+- age_range（年代）  
+- name（氏名）  
+- department（部署）  
+- age（年齢）
+
+#### ● mode による補完ルール
+
+| mode      | Django が使用する情報  | 使用しない情報   |
+| --------- | ---------------------- | ---------------- |
+| anonymous | すべて "-"（完全匿名） | 全情報           |
+| semi      | gender, age_range      | 氏名・部署・年齢 |
+| signed    | 全情報を利用           | なし             |
+
+#### ● 補完後のデータ例
+
+```python
+分析用_df = pd.DataFrame({
+    "timestamp": df["timestamp"],
+    "employee_id": df["employee_id"],
+    "mode": df["mode"],
+    "content": df["content"],
+    "tag": df["tag"],
+    "gender": 補完データ["gender"],
+    "age_range": 補完データ["age_range"],
+    "department": 補完データ["department"],
+})
+```
+
+---
+
+### 8.3.4 利用方法（分析側）
+
+補完後の DataFrame は以下の用途で使用される。
+
+- タグ別投稿件数集計  
+- 部署別傾向（署名モードのみ）  
+- 性別・年代別傾向（準匿名）  
+- 時間帯別分析  
+- 月次の投稿量推移  
+- 体調データ（SQLite）との相関分析（将来拡張）
+
+---
+
+### 8.3.5 本仕様の意義
+
+- PHP 側で個人情報を扱わないため安全性が高い  
+- Django が employee_id を用いて正確な社員情報を補完できる  
+- CSV と DB を統合した分析が可能  
+- Django と PHP の疎結合を維持し、保守性を高める
+
 
 ---
 
