@@ -1,0 +1,78 @@
+/* ==============================
+   ベース設定
+============================== */
+body {
+    font-family: "Noto Sans JP", sans-serif;
+    text-align: center;
+    margin: 40px;
+}
+
+/* セクション全体の余白 */
+.section {
+    margin-bottom: 40px;
+}
+
+/* セクション見出し */
+.section h2 {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+}
+
+/* ==============================
+   アイコン配置
+============================== */
+.icons {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    /* アイコン間の間隔 */
+    margin-top: 10px;
+}
+
+.icon {
+    width: 100px;
+    text-align: center;
+}
+
+.icon img {
+    display: block;
+    width: 60px;
+    height: 60px;
+    margin: 0 auto;
+    /* object-fit: contain; */
+    /* border-radius: 10px; */
+    /* transition: transform 0.2s; */
+}
+
+.label {
+    display: block;
+    width: 100%;
+    text-align: center;
+    margin-top: 4px;
+}
+
+/* ホバー時の軽い拡大エフェクト */
+.icon img:hover {
+    transform: scale(1.1);
+}
+
+/* ==============================
+   ご意見箱ボタン
+============================== */
+.feedback-btn {
+    position: fixed;
+    right: 40px;
+    bottom: 40px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.feedback-btn:hover {
+    background-color: #0056b3;
+}

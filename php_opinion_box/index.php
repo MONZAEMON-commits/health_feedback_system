@@ -5,7 +5,7 @@ $employee_id = $_GET['id'] ?? '';
 <html>
 <body>
     <h2>投稿形式を選択</h2>
-
+    <link rel="stylesheet" href="css/style.css">
     <form action="form.php" method="post">
 
         <input type="hidden" name="employee_id" value="<?= $employee_id ?>">
