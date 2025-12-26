@@ -55,14 +55,14 @@ Users (社員情報)
 
 ### ● フィールド
 
-| フィールド名 | 型           | 説明                             |
-| ------------ | ------------ | -------------------------------- |
-| user_id      | FK(users.id) | User との 1対1                   |
-| full_name    | varchar      | 氏名                             |
-| gender       | varchar      | 男性 / 女性 / その他             |
-| age          | int          | 年齢                             |
-| department   | varchar      | 部署名                           |
-| is_target    | bool         | 集計対象外フラグ（true＝対象外） |
+| フィールド名 | 型           | 説明                                   |
+| ------------ | ------------ | -------------------------------------- |
+| user_id      | FK(users.id) | User との 1対1                         |
+| full_name    | varchar      | 氏名                                   |
+| gender       | varchar      | 男性 / 女性 / その他                   |
+| age          | int          | 年齢（数値のみを正規データとして保持） |
+| department   | varchar      | 部署名                                 |
+| is_target    | bool         | 集計対象外フラグ（true＝対象外）       |
 
 ---
 
@@ -73,21 +73,29 @@ Users (社員情報)
 
 ### ● フィールド
 
-| フィールド名 | 型           | 説明                    |
-| ------------ | ------------ | ----------------------- |
-| id           | int          | 主キー                  |
-| user_id      | FK(users.id) | 入力者                  |
-| date         | date         | 入力日（1日1レコード）  |
-| physical     | int          | 肉体スコア（1〜5）      |
-| mental       | int          | 精神スコア（1〜5）      |
-| created_at   | datetime     | 入力日時                |
-| is_absent    | bool         | 欠勤＝true、出勤＝false |
-| notes        | text         | 備考（任意）            |
+| フィールド名 | 型           | 説明                                  |
+| ------------ | ------------ | ------------------------------------- |
+| id           | int          | 主キー                                |
+| user_id      | FK(users.id) | 入力者                                |
+| date         | date         | 入力日（1日1レコード）                |
+| physical     | int          | 肉体スコア（1〜5）                    |
+| mental       | int          | 精神スコア（1〜5）                    |
+| created_at   | datetime     | 入力日時                              |
+| is_absent    | bool         | 休みフラグ（休み＝true、出勤＝false） |
+| notes        | text         | 備考（任意）                          |
 
-### ● 欠勤の扱い  
-- 欠勤日は is_absent = true  
+### ● 休みの扱い  
+- 休み日は is_absent = true  
 - physical / mental / notes は **NULL**  
 - 集計時に除外する
+
+### ● 休み種別の将来拡張  
+- 有給／欠勤など複数種別の細分化は将来拡張とする  
+
+### ● 管理者による修正と履歴保持  
+- 管理者は conditions の内容を修正可能とする  
+- 修正履歴は保持可能な構造（例：履歴テーブル、監査ログ等）を想定する  
+- 履歴保持の具体的なテーブル定義は本章では固定しない  
 
 ---
 
@@ -112,11 +120,14 @@ Users (社員情報)
 Django 側で読み込む分析用ファイル。
 
 ```csv
-timestamp, mode, gender, age, department, content, tag
-2025-01-01 10:00, 匿名, -, -, -, "〜〜〜〜", "業務改善"
-2025-01-01 10:05, 準匿名, 男性, 30代, -, "〜〜〜〜", "安全性"
-2025-01-01 10:10, 署名, 女性, 28, 開発, "〜〜〜〜", "環境改善"
+timestamp,employee_id,mode,content,tag
+2025-01-01 10:00,1,匿名,"〜〜〜〜","業務改善"
+2025-01-01 10:05,2,準匿名,"〜〜〜〜","安全性"
+2025-01-01 10:10,3,署名,"〜〜〜〜","環境改善"
 ```
+
+### ● DB との突合キー  
+- CSV の employee_id をキーに DB（users.id）と突合する  
 
 ---
 
@@ -127,4 +138,3 @@ timestamp, mode, gender, age, department, content, tag
 - conditions テーブルにタグ拡張可能  
 - 意見箱は DB 化（別テーブル化）も容易  
 - AI 解析用に教師データとして扱える構造  
-

@@ -13,15 +13,15 @@
 
 ### ● Django 側
 - SQLite または PostgreSQL データベースファイル  
-  - employees テーブル  
-  - condition_records テーブル  
-  - attendance テーブル  
-  - notifications テーブル  
-- 設定ファイル（settings.py / 認証設定）
+  - users テーブル  
+  - employee_profiles テーブル  
+  - conditions テーブル  
+  - system_settings テーブル  
+- （設定ファイルは Git 管理を想定するためバックアップ対象外） 
 
 ### ● PHP 側
 - 意見投稿 CSV（opinion_box.csv）
-- 追加で保存されたログ類（error_log など）
+- （ログ類はバックアップ対象外）  
 
 ---
 
@@ -68,7 +68,7 @@ backups/
 - マイグレーション整合性は不要（SQLite 前提のため）
 
 ### ● CSV
-- 元の `opinion_box.csv` を上書きすれば復元完了
+- バックアップファイルから `opinion_box.csv` を復元（上書き）すれば復元完了  
 
 ---
 
@@ -76,7 +76,7 @@ backups/
 
 将来的に以下の拡張を導入可能：
 
-### ● A. 毎日バックアップ  
+### ● A. 毎日バックアップ（現行仕様には含まれない）  
 - 1日1回自動バックアップを cron or Windows Task で実施
 
 ### ● B. 外部保存  
