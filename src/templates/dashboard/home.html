@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}管理者ダッシュボード{% endblock %}
+
+{% block content %}
+<h2>管理者ダッシュボード</h2>
+
+{% if role_level == 1 %}
+<p>管理者レベル1：氏名あり表示</p>
+{% elif role_level == 2 %}
+<p>管理者レベル2：匿名表示</p>
+{% endif %}
+
+<hr>
+
+<h3>本日の集計</h3>
+<ul>
+    <li>入力件数：{{ total_count }}</li>
+    <li>出勤：{{ present_count }}</li>
+    <li>欠勤：{{ absent_count }}</li>
+</ul>
+{% endblock %}

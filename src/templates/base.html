@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}社員体調管理システム{% endblock %}</title>
+</head>
+
+<body>
+
+    <header>
+        <h1>社員体調管理システム</h1>
+
+        {% if user.is_authenticated %}
+        <nav>
+            <a href="/dashboard/">ダッシュボード</a>
+            |
+            <form action="{% url 'logout' %}" method="post" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit">ログアウト</button>
+            </form>
+        </nav>
+        {% endif %}
+
+    </header>
+
+    <hr>
+
+    <main>
+        {% block content %}
+        {% endblock %}
+    </main>
+
+</body>
+
+</html>
