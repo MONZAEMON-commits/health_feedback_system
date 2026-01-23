@@ -87,7 +87,7 @@ timestamp, employee_id, mode, content, tag
 
 ### ● セキュリティ要件
 - Django 側は標準の CSRF 対策を使用
-- PHP ご意見箱では **CSRF トークンは使用しない**  
+- PHP ご意見箱では **セッションフラグによる直接 POST 防止**  
   POST 限定・直接アクセス防止で代替する  
 - XSS・SQL Injection はエスケープおよび ORM で対策
 - 権限レベルに応じた閲覧制御を行う

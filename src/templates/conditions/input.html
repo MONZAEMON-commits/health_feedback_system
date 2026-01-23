@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <title>体調入力</title>
+</head>
+
+<body>
+
+    <h1>体調入力</h1>
+
+    <p>ユーザー：{{ request.user.username }}</p>
+    <p>日付：{{ today }}</p>
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">送信</button>
+    </form>
+
+</body>
+
+</html>

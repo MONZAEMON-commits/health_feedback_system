@@ -15,16 +15,19 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path,include
-from django.http import HttpResponse
+from django.urls import path, include
+from django.shortcuts import redirect
 
-def home(request):
-    return HttpResponse("ログイン成功")
+def root_redirect(request):
+    return redirect("/login/")
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path("accounts/", include("accounts.urls")),
-    path("accounts/", include("django.contrib.auth.urls")),
-    path("", home),
+    path("", root_redirect), 
+    path("admin/", admin.site.urls),
+    # /login/ をここで拾う
+    path("", include("accounts.urls")),
+    # 一般ユーザー
+    path("conditions/", include("conditions.urls")),
+    # 管理者
     path("dashboard/", include("dashboard.urls")),
 ]

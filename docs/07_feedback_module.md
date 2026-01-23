@@ -287,7 +287,7 @@ timestamp, employee_id, mode, content, tag
 
 success.php では投稿完了メッセージを表示し、  
 5秒後に Django 側のログイン画面へ自動遷移する。
-
+can_post を要求し、処理後に false。
 ---
 
 ---
