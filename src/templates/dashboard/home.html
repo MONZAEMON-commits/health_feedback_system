@@ -25,46 +25,7 @@
     <li>出勤：{{ present_count }}</li>
     <li>欠勤：{{ absent_count }}</li>
 </ul>
-<h3>部署別 平均スコア</h3>
 
-<table border="1">
-    <tr>
-        <th>部署</th>
-        <th>平均（肉体）</th>
-        <th>平均（精神）</th>
-    </tr>
-
-    {% for row in dept_stats %}
-    <tr>
-        <td>{{ row.user__employeeprofile__department }}</td>
-        <td>{{ row.avg_physical|floatformat:1 }}</td>
-        <td>{{ row.avg_mental|floatformat:1 }}</td>
-    </tr>
-    {% endfor %}
-</table>
-<hr>
-
-<h3>月次推移（平均スコア）</h3>
-<canvas id="monthlyChart"></canvas>
-
-<table border="1">
-    <tr>
-        <th>月</th>
-        <th>平均（肉体）</th>
-        <th>平均（精神）</th>
-        <th>入力件数</th>
-    </tr>
-
-    {% for row in monthly_stats %}
-    <tr>
-        <td>{{ row.month|date:"Y-m" }}</td>
-        <td>{{ row.avg_physical|floatformat:1 }}</td>
-        <td>{{ row.avg_mental|floatformat:1 }}</td>
-        <td>{{ row.count }}</td>
-    </tr>
-    {% endfor %}
-</table>
-<hr>
 <h3>ご意見箱（タグ別件数）</h3>
 
 {% if tag_counts %}
@@ -96,24 +57,50 @@
 <p>※ 現在、集計対象の投稿はありません。</p>
 {% endif %}
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-    const ctx = document.getElementById("monthlyChart");
-    if (ctx) {
-        const labels = JSON.parse('{{ months_json|escapejs }}');
-        const physical = JSON.parse('{{ avg_physical_json|escapejs }}');
-        const mental = JSON.parse('{{ avg_mental_json|escapejs }}');
+<h3>全体平均・中央値（analysis）</h3>
 
-        new Chart(ctx, {
-            type: "line",
-            data: {
-                labels: labels,
-                datasets: [
-                    { label: "肉体スコア（平均）", data: physical },
-                    { label: "精神スコア（平均）", data: mental },
-                ],
-            },
-        });
-    }
-</script>
+<table border="1">
+    <tr>
+        <th>項目</th>
+        <th>平均</th>
+        <th>中央値</th>
+    </tr>
+    <tr>
+        <td>肉体</td>
+        <td>
+            {% if avg_physical_analysis is not None %}
+            {{ avg_physical_analysis|floatformat:1 }}
+            {% else %}
+            -
+            {% endif %}
+        </td>
+        <td>
+            {% if median_physical_analysis is not None %}
+            {{ median_physical_analysis|floatformat:1 }}
+            {% else %}
+            -
+            {% endif %}
+        </td>
+    </tr>
+    <tr>
+        <td>精神</td>
+        <td>
+            {% if avg_mental_analysis is not None %}
+            {{ avg_mental_analysis|floatformat:1 }}
+            {% else %}
+            -
+            {% endif %}
+        </td>
+        <td>
+            {% if median_mental_analysis is not None %}
+            {{ median_mental_analysis|floatformat:1 }}
+            {% else %}
+            -
+            {% endif %}
+        </td>
+    </tr>
+</table>
+
+<hr>
+
 {% endblock %}

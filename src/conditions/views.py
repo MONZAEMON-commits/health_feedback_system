@@ -26,9 +26,14 @@ def input_view(request):
             target_date=today
         )
 
-    return render(request, "conditions/input.html", {
-        "form": form,
-    })
+    return render(
+        request,
+        "conditions/input.html",
+        {
+            "form": form,
+            "today": today,  # ★ 追加：日付表示用
+        }
+    )
 
 
 @login_required

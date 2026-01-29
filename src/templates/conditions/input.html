@@ -1,24 +1,90 @@
-<!DOCTYPE html>
-<html lang="ja">
+{% extends "base.html" %}
+{% load static %}
 
-<head>
-    <meta charset="UTF-8">
-    <title>体調入力</title>
-</head>
+{% block title %}体調入力{% endblock %}
 
-<body>
+{% block content %}
 
-    <h1>体調入力</h1>
+<h1>体調入力</h1>
 
-    <p>ユーザー：{{ request.user.username }}</p>
-    <p>日付：{{ today }}</p>
+<p>ユーザー：{{ request.user.username }}</p>
+<p>日付：{{ today }}</p>
 
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">送信</button>
-    </form>
+<form method="post">
+    {% csrf_token %}
 
-</body>
+    {# non-field errors #}
+    {% if form.non_field_errors %}
+    <div class="form-errors">
+        {{ form.non_field_errors }}
+    </div>
+    {% endif %}
 
-</html>
+    {# Physical #}
+    <div class="form-field condition-block {% if form.is_absent.value %}is-absent{% endif %}">
+        <p class="condition-title">肉体</p>
+
+        <div class="condition-options">
+            {% for i in "12345" %}
+            {% if form.physical.value|stringformat:"s" == i %}
+            <input type="radio" name="physical" id="physical_{{ i }}" value="{{ i }}" checked>
+            {% else %}
+            <input type="radio" name="physical" id="physical_{{ i }}" value="{{ i }}">
+            {% endif %}
+            <label for="physical_{{ i }}">
+                <div class="icon-circle">
+                    <img src="{% static 'img/physical_'|add:i|add:'.png' %}" alt="physical {{ i }}">
+                </div>
+                <div class="condition-text">
+                    {% if i == "1" %}悪い{% endif %}
+                    {% if i == "2" %}不調{% endif %}
+                    {% if i == "3" %}普通{% endif %}
+                    {% if i == "4" %}良い{% endif %}
+                    {% if i == "5" %}とても良い{% endif %}
+                </div>
+            </label>
+            {% endfor %}
+        </div>
+    </div>
+
+    {# Mental #}
+    <div class="form-field condition-block {% if form.is_absent.value %}is-absent{% endif %}">
+        <p class="condition-title">精神</p>
+
+        <div class="condition-options">
+            {% for i in "12345" %}
+            {% if form.mental.value|stringformat:"s" == i %}
+            <input type="radio" name="mental" id="mental_{{ i }}" value="{{ i }}" checked>
+            {% else %}
+            <input type="radio" name="mental" id="mental_{{ i }}" value="{{ i }}">
+            {% endif %}
+            <label for="mental_{{ i }}">
+                <img src="{% static 'img/mental_'|add:i|add:'.png' %}" alt="mental {{ i }}">
+                <div class="condition-text">
+                    {% if i == "1" %}悪い{% endif %}
+                    {% if i == "2" %}不調{% endif %}
+                    {% if i == "3" %}普通{% endif %}
+                    {% if i == "4" %}良い{% endif %}
+                    {% if i == "5" %}とても良い{% endif %}
+                </div>
+            </label>
+            {% endfor %}
+        </div>
+    </div>
+
+    {# Is absent #}
+    <div class="form-field">
+        {{ form.is_absent }}
+        {{ form.is_absent.label_tag }}
+    </div>
+
+    {# Notes #}
+    <div class="form-field">
+        {{ form.notes.label_tag }}
+        {{ form.notes }}
+    </div>
+
+    <button type="submit">送信</button>
+</form>
+
+{% endblock %}

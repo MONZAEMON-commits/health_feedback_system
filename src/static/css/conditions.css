@@ -1,0 +1,80 @@
+/* ===== 共通 ===== */
+.form-field {
+    margin-bottom: 16px;
+}
+
+.condition-title {
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+/* ===== 選択肢グリッド ===== */
+.condition-options {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+}
+
+/* レスポンシブ：画面が狭い場合は2行 */
+@media (max-width: 600px) {
+    .condition-options {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* ===== radio 非表示 ===== */
+.condition-options input[type="radio"] {
+    display: none;
+}
+
+/* ===== ラベル（クリック領域） ===== */
+.condition-options label {
+    display: grid;
+    justify-items: center;
+    gap: 6px;
+
+    padding: 10px;
+    border-radius: 8px;
+    /* ★ 円をやめて角丸カードに */
+    cursor: pointer;
+}
+
+/* ===== アイコン ===== */
+.condition-options img {
+    width: 48px;
+    height: 48px;
+}
+
+/* ===== 日本語テキスト ===== */
+.condition-text {
+    font-size: 12px;
+}
+
+/* ===== 選択状態：影付き ===== */
+.condition-options input[type="radio"]:checked+label {
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.28);
+}
+
+/* ===== 欠勤ON時（表現のみ） ===== */
+.is-absent .condition-options {
+    pointer-events: none;
+    opacity: 0.5;
+}
+
+header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+header nav {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+header {
+    display: flex;
+    justify-content: flex-end;
+    padding: 8px 12px;
+}

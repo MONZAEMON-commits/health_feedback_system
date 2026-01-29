@@ -13,6 +13,10 @@ class ConditionForm(forms.ModelForm):
             "is_absent",
             "notes",
         ]
+        labels = {
+            "is_absent": "欠勤",
+            "notes": "備考",
+        }
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop("user")
